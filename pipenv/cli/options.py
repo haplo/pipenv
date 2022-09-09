@@ -11,7 +11,6 @@ from pipenv.vendor.click import (
     echo,
     make_pass_decorator,
     option,
-    secho,
 )
 from pipenv.vendor.click import types as click_types
 from pipenv.vendor.click_didyoumean import DYMMixin
@@ -64,8 +63,6 @@ class State:
         self.quiet = False
         self.pypi_mirror = None
         self.python = None
-        self.two = None
-        self.three = None
         self.site_packages = None
         self.clear = False
         self.system = False
@@ -306,28 +303,6 @@ def extra_pip_args(f):
     )(f)
 
 
-def three_option(f):
-    def callback(ctx, param, value):
-        state = ctx.ensure_object(State)
-        if value is not None:
-            secho(
-                "WARNING: --three is deprecated! pipenv uses python3 by default",
-                err=True,
-                fg="yellow",
-            )
-            state.three = value
-        return value
-
-    return option(
-        "--three",
-        is_flag=True,
-        default=None,
-        help="Use Python 3 when creating virtualenv. Deprecated",
-        callback=callback,
-        expose_value=False,
-    )(f)
-
-
 def python_option(f):
     def callback(ctx, param, value):
         state = ctx.ensure_object(State)
@@ -552,7 +527,6 @@ def common_options(f):
     f = verbose_option(f)
     f = quiet_option(f)
     f = clear_option(f)
-    f = three_option(f)
     f = python_option(f)
     return f
 

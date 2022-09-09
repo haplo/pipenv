@@ -114,8 +114,6 @@ activate a virtualenv, run `$ pipenv shell`).
 -   A virtualenv will automatically be created, when one doesn\'t exist.
 -   When no parameters are passed to `install`, all packages
     `[packages]` specified will be installed.
--   To initialize a virtual environment with system python3, run
-    `$ pipenv --three`.
 -   Otherwise, whatever virtualenv defaults to will be the default.
 
 ### Other Commands
@@ -168,7 +166,6 @@ Magic shell completions are now enabled!
                                       [env var: PIPENV_SITE_PACKAGES]
       --python TEXT                   Specify which version of Python virtualenv
                                       should use.
-      --three                         Use Python 3 when creating virtualenv.
       --clear                         Clears caches (pipenv, pip).  [env var:
                                       PIPENV_CLEAR]
       -q, --quiet                     Quiet mode.

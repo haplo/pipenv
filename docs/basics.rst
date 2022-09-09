@@ -305,13 +305,7 @@ Along with the basic install command, which takes the form::
 
 The user can provide these additional parameters:
 
-    - ``--three`` — Performs the installation in a virtualenv using the system ``python3`` link.
     - ``--python`` — Performs the installation in a virtualenv using the provided Python interpreter.
-
-    .. warning:: None of the above commands should be used together. They are also
-                 **destructive** and will delete your current virtualenv before replacing
-                 it with an appropriately versioned one.
-
     - ``--dev`` — Install both ``develop`` and ``default`` packages from ``Pipfile``.
     - ``--system`` — Use the system ``pip`` command rather than the one from your virtualenv.
     - ``--deploy`` — Make sure the packages are properly locked in Pipfile.lock, and abort if the lock file is out-of-date.

@@ -307,9 +307,9 @@ def find_a_system_python(line):
     return python_entry
 
 
-def ensure_python(project, three=None, python=None):
+def ensure_python(project, python=None):
     # Runtime import is necessary due to the possibility that the environments module may have been reloaded.
-    if project.s.PIPENV_PYTHON and python is False and three is None:
+    if project.s.PIPENV_PYTHON and python is False:
         python = project.s.PIPENV_PYTHON
 
     def abort(msg=""):
@@ -325,10 +325,8 @@ def ensure_python(project, three=None, python=None):
         )
         sys.exit(1)
 
-    project.s.USING_DEFAULT_PYTHON = three is None and not python
+    project.s.USING_DEFAULT_PYTHON = not python
     # Find out which python is desired.
-    if not python:
-        python = convert_three_to_python(three, python)
     if not python:
         python = project.required_python_version
     if not python:
@@ -431,9 +429,7 @@ def ensure_python(project, three=None, python=None):
     return path_to_python
 
 
-def ensure_virtualenv(
-    project, three=None, python=None, site_packages=None, pypi_mirror=None
-):
+def ensure_virtualenv(project, python=None, site_packages=None, pypi_mirror=None):
     """Creates a virtualenv, if one doesn't exist."""
 
     def abort():
@@ -444,7 +440,7 @@ def ensure_virtualenv(
             # Ensure environment variables are set properly.
             ensure_environment()
             # Ensure Python is available.
-            python = ensure_python(project, three=three, python=python)
+            python = ensure_python(project, python=python)
             if python is not None and not isinstance(python, str):
                 python = python.path.as_posix()
             # Create the virtualenv.
@@ -466,11 +462,11 @@ def ensure_virtualenv(
             # If interrupted, cleanup the virtualenv.
             cleanup_virtualenv(project, bare=False)
             sys.exit(1)
-    # If --python or --three were passed...
-    elif (python) or (three is not None) or (site_packages is not None):
+    # If --python was passed...
+    elif python or (site_packages is not None):
         project.s.USING_DEFAULT_PYTHON = False
         # Ensure python is installed before deleting existing virtual env
-        python = ensure_python(project, three=three, python=python)
+        python = ensure_python(project, python=python)
         if python is not None and not isinstance(python, str):
             python = python.path.as_posix()
 
@@ -492,7 +488,6 @@ def ensure_virtualenv(
         # Call this function again.
         ensure_virtualenv(
             project,
-            three=three,
             python=python,
             site_packages=site_packages,
             pypi_mirror=pypi_mirror,
@@ -501,7 +496,6 @@ def ensure_virtualenv(
 
 def ensure_project(
     project,
-    three=None,
     python=None,
     validate=True,
     system=False,
@@ -525,7 +519,6 @@ def ensure_project(
     if not system_or_exists:
         ensure_virtualenv(
             project,
-            three=three,
             python=python,
             site_packages=site_packages,
             pypi_mirror=pypi_mirror,
@@ -859,21 +852,6 @@ def do_install_dependencies(
             err=True,
         )
         sys.exit(1)
-
-
-def convert_three_to_python(three, python):
-    """Converts a Three flag into a Python flag, and raises customer warnings
-    in the process, if needed.
-    """
-    if not python:
-        if three is False:
-            return "2"
-
-        elif three is True:
-            return "3"
-
-    else:
-        return python
 
 
 def do_create_virtualenv(project, python=None, site_packages=None, pypi_mirror=None):
@@ -2022,7 +2000,6 @@ def do_install(
     editable_packages=False,
     index_url=False,
     dev=False,
-    three=False,
     python=False,
     pypi_mirror=None,
     system=False,
@@ -2055,7 +2032,6 @@ def do_install(
     # Ensure that virtualenv is available and pipfile are available
     ensure_project(
         project,
-        three=three,
         python=python,
         system=system,
         warn=True,
@@ -2372,7 +2348,6 @@ def do_uninstall(
     project,
     packages=False,
     editable_packages=False,
-    three=None,
     python=False,
     system=False,
     lock=False,
@@ -2392,7 +2367,7 @@ def do_uninstall(
     # Ensure that virtualenv is available.
     # TODO: We probably shouldn't ensure a project exists if the outcome will be to just
     # install things in order to remove them... maybe tell the user to install first?
-    ensure_project(project, three=three, python=python, pypi_mirror=pypi_mirror)
+    ensure_project(project, python=python, pypi_mirror=pypi_mirror)
     # Un-install all dependencies, if --all was provided.
     if not any([packages, editable_packages, all_dev, all]):
         raise exceptions.PipenvUsageError("No package provided!", ctx=ctx)
@@ -2526,13 +2501,10 @@ def do_uninstall(
     sys.exit(int(failure))
 
 
-def do_shell(
-    project, three=None, python=False, fancy=False, shell_args=None, pypi_mirror=None
-):
+def do_shell(project, python=False, fancy=False, shell_args=None, pypi_mirror=None):
     # Ensure that virtualenv is available.
     ensure_project(
         project,
-        three=three,
         python=python,
         validate=False,
         pypi_mirror=pypi_mirror,
@@ -2686,7 +2658,7 @@ def do_run_posix(project, script, command, env):
     )
 
 
-def do_run(project, command, args, three=None, python=False, pypi_mirror=None):
+def do_run(project, command, args, python=False, pypi_mirror=None):
     """Attempt to run command either pulling from project or interpreting as executable.
 
     Args are appended to the command in [scripts] section of project if found.
@@ -2698,7 +2670,6 @@ def do_run(project, command, args, three=None, python=False, pypi_mirror=None):
     # Ensure that virtualenv is available.
     ensure_project(
         project,
-        three=three,
         python=python,
         validate=False,
         pypi_mirror=pypi_mirror,
@@ -2742,7 +2713,6 @@ def do_run(project, command, args, three=None, python=False, pypi_mirror=None):
 
 def do_check(
     project,
-    three=None,
     python=False,
     system=False,
     db=None,
@@ -2758,7 +2728,6 @@ def do_check(
         # Ensure that virtualenv is available.
         ensure_project(
             project,
-            three=three,
             python=python,
             validate=False,
             warn=False,
@@ -3025,7 +2994,6 @@ def do_graph(project, bare=False, json=False, json_tree=False, reverse=False):
 def do_sync(
     project,
     dev=False,
-    three=None,
     python=None,
     bare=False,
     dont_upgrade=False,
@@ -3045,7 +3013,6 @@ def do_sync(
     # Ensure that virtualenv is available if not system.
     ensure_project(
         project,
-        three=three,
         python=python,
         validate=False,
         system=system,
@@ -3079,7 +3046,6 @@ def do_sync(
 
 def do_clean(
     project,
-    three=None,
     python=None,
     dry_run=False,
     bare=False,
@@ -3089,9 +3055,7 @@ def do_clean(
     # Ensure that virtualenv is available.
     from pipenv.patched.pip._vendor.packaging.utils import canonicalize_name
 
-    ensure_project(
-        project, three=three, python=python, validate=False, pypi_mirror=pypi_mirror
-    )
+    ensure_project(project, python=python, validate=False, pypi_mirror=pypi_mirror)
     ensure_lockfile(project, pypi_mirror=pypi_mirror)
     # Make sure that the virtualenv's site packages are configured correctly
     # otherwise we may end up removing from the global site packages directory
